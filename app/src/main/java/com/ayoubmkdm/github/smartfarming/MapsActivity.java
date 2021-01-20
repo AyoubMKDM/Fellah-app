@@ -14,6 +14,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -28,6 +29,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.bottomappbar.BottomAppBar;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleMap.OnMapClickListener, GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerClickListener {
@@ -48,6 +51,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     private PolygonOptions mOptions;
     private Polygon mPolygon;
+    private BottomAppBar mBottomAppBar;
+    private LinearLayout mBottomSheet;
+    private BottomSheetBehavior mBottomSheetBehavior;
 
     @SuppressLint("MissingPermission")
     @Override
@@ -110,9 +116,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        //Initialization
+        mBottomAppBar = findViewById(R.id.maps_bottom_bar);
+        mBottomSheet = findViewById(R.id.tools_bottom_sheet);
+        mBottomSheetBehavior = BottomSheetBehavior.from(mBottomSheet);
         //get the data from the intent
         mLocationPermissionGranted = getIntent().getBooleanExtra(MainActivity.IS_PERMISSIONS_GRANTED,
                 false);
+        mBottomAppBar.setOnClickListener(view -> {
+            mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+        });
     }
 
     @Override
