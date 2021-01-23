@@ -1,5 +1,6 @@
 package com.ayoubmkdm.github.smartfarming;
 
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
@@ -14,7 +15,13 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -29,11 +36,11 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.tasks.Task;
-import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
-        GoogleMap.OnMapClickListener, GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerClickListener {
+        GoogleMap.OnMapClickListener, GoogleMap.OnMapLongClickListener,
+        GoogleMap.OnMarkerClickListener, GoogleMap.OnMarkerDragListener, View.OnClickListener {
     private static final String TAG = "MapsActivity";
     public static final float DEFAULT_ZOOM = 15f;
     private static final String FINE_LOCATION = Manifest.permission.ACCESS_FINE_LOCATION;
@@ -51,23 +58,90 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     private PolygonOptions mOptions;
     private Polygon mPolygon;
-    private BottomAppBar mBottomAppBar;
-    private LinearLayout mBottomSheet;
+    private RelativeLayout mLayoutInfosOpened;
+    private LinearLayout mLayoutInfosClosed;
     private BottomSheetBehavior mBottomSheetBehavior;
+    private ImageButton mButtonToolsMenu;
+    private ImageButton mButtonCloseInfosLayout;
+    private ImageButton mButtonOpenInfosLayout;
+    private LinearLayout mBottomSheet;
+    private ImageButton mButtonMyLocation;
+    private ImageButton mButtonSearch;
+    private ImageButton mButtonDragMarker;
+    private ImageButton mButtonDeleteMarker;
+    private ImageButton mButtonSaveMyWork;
+    private Switch mSwitchDeleteMarker;
+    private EditText mSearchBar;
+    private TextView mTextInfos;
+    private boolean isDeletingMarkerOn = false;
 
+
+    // TODO add the mOptions and mPolygon to the savedInstanceState Bundle
+    @Override
+    protected void onResume() {
+        super.onResume();
+        solvePermissions(isPermissionsSet());
+        initGoogleMaps();
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_maps);
+        //Initialization
+        mBottomSheet = findViewById(R.id.tools_bottom_sheet);
+        mBottomSheetBehavior = BottomSheetBehavior.from(mBottomSheet);
+        mLayoutInfosClosed = findViewById(R.id.layout_infos_closed);
+        mLayoutInfosOpened = findViewById(R.id.layout_infos_opened);
+        mButtonCloseInfosLayout = findViewById(R.id.maps_button_img_close);
+        mButtonOpenInfosLayout = findViewById(R.id.maps_button_img_open);
+        mButtonToolsMenu = findViewById(R.id.maps_button_img_tool_menu);
+        mButtonToolsMenu = findViewById(R.id.maps_button_img_tool_menu);
+        mButtonMyLocation = findViewById(R.id.maps_button_find_my_location);
+        mButtonSearch = findViewById(R.id.maps_button_search);
+        mButtonDeleteMarker = findViewById(R.id.maps_button_img_delete_marker);
+        mButtonSaveMyWork = findViewById(R.id.maps_button_img_save_work);
+        mSwitchDeleteMarker = findViewById(R.id.maps_switch_delete_marker);
+        mTextInfos = findViewById(R.id.maps_text_tool_info);
+        mSearchBar = findViewById(R.id.maps_edtxt_search_bar);
+        //get the data from the intent
+        mLocationPermissionGranted = getIntent().getBooleanExtra(MainActivity.IS_PERMISSIONS_GRANTED,
+                false);
+        handelInfoBarClicks();
+        handelBottomMenuClicks();
+        //BottomSheet utility
+        mBottomSheetBehavior.addBottomSheetCallback(bottomSheetCallback());
+    }
+
+    private void handelInfoBarClicks() {
+        mButtonCloseInfosLayout.setOnClickListener(this);
+        mButtonOpenInfosLayout.setOnClickListener(this);
+        mButtonToolsMenu.setOnClickListener(this);
+    }
+
+    private void handelBottomMenuClicks() {
+        mButtonSearch.setOnClickListener(this);
+        mButtonMyLocation.setOnClickListener(this);
+        mButtonDeleteMarker.setOnClickListener(this);
+    }
+
+    /************************** GOOGLE MAPS CALLBACK *******************************/
     @SuppressLint("MissingPermission")
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         solvePermissions(isPermissionsSet());
-        getDeviceLocation();
+        if (isGpsActivated(this)) {
+            getDeviceLocation();
+        }
         mMap.setMyLocationEnabled(true);
+        mMap.getUiSettings().setMyLocationButtonEnabled(false);
         //TODO clean the code
         mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
-
         mMap.setOnMapClickListener(this);
         mMap.setOnMapLongClickListener(this);
         mMap.setOnMarkerClickListener(this);
+        mMap.setOnMarkerDragListener(this);
 
         markerClicked = false;
     }
@@ -84,56 +158,37 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Toast.makeText(this, "New marker added @ " + point.toString(),
                 Toast.LENGTH_LONG).show();
 
-        mMap.addMarker(new MarkerOptions().position(point).title(point.toString()));
-
+        mMap.addMarker(new MarkerOptions().position(point).title(point.toString()).draggable(true));
         markerClicked = false;
     }
 
     @Override
     public boolean onMarkerClick(Marker marker) {
-        if (markerClicked) {
+        if (mPolygon != null) {
+            mPolygon.remove();
+            mPolygon = null;
+        }
+        if (isDeletingMarkerOn){
+            LatLng latLng = marker.getPosition();
+            marker.remove();
             if (mPolygon != null) {
-                mPolygon.remove();
-                mPolygon = null;
+                if (mOptions.getPoints().indexOf(latLng) > 0)   mOptions.getPoints().remove(mOptions.getPoints().indexOf(latLng));
+                mPolygon = mMap.addPolygon(mOptions);
             }
-            mOptions.add(marker.getPosition());
-            mOptions.strokeColor(Color.rgb(255,214,0));
-            mOptions.fillColor(Color.argb(150,255,255,82));
-            mPolygon = mMap.addPolygon(mOptions);
-        } else {
-            if (mPolygon != null) {
-                mPolygon.remove();
-                mPolygon = null;
+        }else {
+            if (markerClicked) {
+                mOptions.add(marker.getPosition());
+                mOptions.strokeColor(Color.rgb(255, 214, 0));
+                mOptions.fillColor(Color.argb(150, 255, 255, 82));
+                mPolygon = mMap.addPolygon(mOptions);
+            } else {
+                mOptions = new PolygonOptions().add(marker.getPosition());
+                markerClicked = true;
             }
-            mOptions = new PolygonOptions().add(marker.getPosition());
-            markerClicked = true;
         }
         return true;
     }
 
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_maps);
-        //Initialization
-        mBottomAppBar = findViewById(R.id.maps_bottom_bar);
-        mBottomSheet = findViewById(R.id.tools_bottom_sheet);
-        mBottomSheetBehavior = BottomSheetBehavior.from(mBottomSheet);
-        //get the data from the intent
-        mLocationPermissionGranted = getIntent().getBooleanExtra(MainActivity.IS_PERMISSIONS_GRANTED,
-                false);
-        mBottomAppBar.setOnClickListener(view -> {
-            mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-        });
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        solvePermissions(isPermissionsSet());
-        initGoogleMaps();
-    }
 
     private void solvePermissions(int permissionCode) {
         switch (permissionCode){
@@ -177,7 +232,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private void getDeviceLocation() {
         Log.d(TAG, "getDeviceCurrentLocation: getting the device current location");
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
         try {
             if (mLocationPermissionGranted) {
                 Task<Location> location = mFusedLocationClient.getLastLocation();
@@ -207,23 +261,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }catch (SecurityException e){
             Log.d(TAG, "getDeviceLocation: SecurityException: " + e.getMessage());
+            //TODO Create a string resource var for the Toas mnessage
             Toast.makeText(this, "Une erreur s'est produite lors de la tentative " +
                     "d'obtention de votre position \n" + e.getMessage(),Toast.LENGTH_LONG).show();
         }
-    }
-
-    private void drawAPolygonAroundTheCurrentPlace() {
-        //TODO add a refresh button to draw another polygon in different location
-        mOptions.clickable(true).add(new LatLng(mCurrentLocation.getLatitude() - 0.001, mCurrentLocation.getLongitude() - 0.001)
-                ,new LatLng(mCurrentLocation.getLatitude() + 0.001, mCurrentLocation.getLongitude() - 0.001)
-                ,new LatLng(mCurrentLocation.getLatitude() + 0.001, mCurrentLocation.getLongitude() + 0.001)
-                ,new LatLng(mCurrentLocation.getLatitude() - 0.001, mCurrentLocation.getLongitude() + 0.001))
-                .fillColor(Color.argb(150,255,255,82))
-                .strokeColor(Color.rgb(255,214,0));
-        //add a polygon to the map
-        Polygon polygon = mMap.addPolygon(mOptions);
-        // Store a data object with the polygon, used here to indicate an arbitrary type.
-        polygon.setTag("parcel");
     }
 
     private void moveCamera(LatLng latLng, float zoom){
@@ -236,14 +277,94 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         assert mLocationManager != null;
         return mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
     }
+
+    @Override
+    public void onMarkerDragStart(Marker marker) {
+        //TODO Create a string resource var for the Toas mnessage
+        Toast.makeText(this, "faites glisser le marqueur où vous voulez", Toast.LENGTH_LONG).show();
+        if (mPolygon != null) {
+            mPolygon.remove();
+            mOptions = new PolygonOptions();
+        }
+    }
+
+    @Override
+    public void onMarkerDrag(Marker marker) {}
+
+    @Override
+    public void onMarkerDragEnd(Marker marker) {}
+
+    /************************* BOTTOM SHEET CALLBACK ***********************************/
+    private BottomSheetBehavior.BottomSheetCallback bottomSheetCallback() {
+        return new BottomSheetBehavior.BottomSheetCallback(){
+            @Override
+            public void onStateChanged(@NonNull View bottomSheet, int newState) {}
+            @Override
+            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+                mButtonToolsMenu.setRotation(slideOffset * 180);
+            }
+        };
+    }
+
+    /******************************* CLICKS HANDELING ***********************************/
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.maps_button_img_close:
+                closeTheInfoBar();
+                break;
+            case R.id.maps_button_img_open:
+                openTheInfoBar();
+                break;
+            case R.id.maps_button_img_tool_menu:
+                expandAndHideBottomSheet();
+                break;
+            case  R.id.maps_button_img_delete_marker:
+                deleteFunctionality();
+                break;
+            case R.id.maps_button_find_my_location:
+                getDeviceLocation();
+                break;
+            case R.id.maps_button_search:
+                openTheSearchBar();
+                break;
+        }
+    }
+
+    private void closeTheInfoBar() {
+        mLayoutInfosOpened.setVisibility(View.GONE);
+        mLayoutInfosClosed.setVisibility(View.VISIBLE);
+    }
+
+    private void openTheInfoBar() {
+        mLayoutInfosClosed.setVisibility(View.GONE);
+        mLayoutInfosOpened.setVisibility(View.VISIBLE);
+    }
+
+    private void expandAndHideBottomSheet() {
+        if (mBottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED){
+            mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+        }else {
+            mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+        }
+    }
+
+    private void deleteFunctionality() {
+        if (mSwitchDeleteMarker.isChecked()) {
+            mSwitchDeleteMarker.setChecked(false);
+        }else{
+            mSwitchDeleteMarker.setChecked(true);
+        }
+        isDeletingMarkerOn = mSwitchDeleteMarker.isChecked();
+    }
+
+    private void openTheSearchBar() {
+        if (mTextInfos.getVisibility() == View.VISIBLE) {
+            mTextInfos.setVisibility(View.GONE);
+            mSearchBar.setVisibility(View.VISIBLE);
+        }else{
+            mTextInfos.setVisibility(View.VISIBLE);
+            mSearchBar.setVisibility(View.GONE);
+        }
+    }
 }
-
-
-
-
-
-
-
-
-
-

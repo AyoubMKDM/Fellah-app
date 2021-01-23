@@ -7,6 +7,10 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="darck_level3">#263238</color>
-    <color name="light_text">#F1F1F1</color>
+    <color name="dark_level3">#141610</color>
+    <color name="dark_level2">#242721</color>
+    <color name="dark_level1">#353832</color>
+    <color name="light_text_3">#F1F1F1</color>
+    <color name="light_text_2">#CDCDCD</color>
+    <color name="light_text_1">#A1A1A1</color>
 </resources>

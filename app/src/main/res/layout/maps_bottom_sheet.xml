@@ -4,7 +4,7 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/darck_level3"
+    android:background="@color/dark_level3"
     android:paddingBottom="10dp"
     android:elevation="10dp"
     android:id="@+id/tools_bottom_sheet"
@@ -15,7 +15,7 @@
         android:layout_width="60dp"
         android:layout_height="5dp"
         android:layout_gravity="center"
-        android:background="@color/light_text"
+        android:background="@color/light_text_3"
         android:layout_margin="6dp"/>
     <LinearLayout
         android:layout_width="wrap_content"
@@ -32,7 +32,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Ma position"
-                android:textColor="@color/light_text"
+                android:textColor="@color/light_text_2"
                 android:textSize="10sp"/>
             <ImageButton
                 android:id="@+id/maps_button_find_my_location"
@@ -53,7 +53,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Recherch"
-                android:textColor="@color/light_text"
+                android:textColor="@color/light_text_2"
                 android:textSize="10sp"/>
             <ImageButton
                 android:id="@+id/maps_button_search"
@@ -76,7 +76,7 @@
                 android:layout_height="wrap_content"
                 android:maxWidth="76dp"
                 android:text="Déplacer une marque"
-                android:textColor="@color/light_text"
+                android:textColor="@color/light_text_2"
                 android:textSize="10sp"
                 android:gravity="center"/>
             <ImageView
@@ -101,16 +101,19 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Supprimer"
-                android:textColor="@color/light_text"
+                android:textColor="@color/light_text_2"
                 android:textSize="10sp"/>
 
-            <ImageView
+            <ImageButton
+                android:backgroundTint="@android:color/transparent"
+                android:id="@+id/maps_button_img_delete_marker"
                 android:layout_width="wrap_content"
                 android:layout_height="0dp"
                 android:layout_margin="6dp"
                 android:src="@drawable/ic_pin"
                 android:layout_weight="3"/>
             <Switch
+                android:id="@+id/maps_switch_delete_marker"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="3dp"/>
@@ -127,10 +130,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Enregestrer"
-                android:textColor="@color/light_text"
+                android:textColor="@color/light_text_2"
                 android:textSize="10sp"/>
             <ImageButton
-                android:id="@+id/maps_button_save_work"
+                android:id="@+id/maps_button_img_save_work"
                 android:background="@android:color/transparent"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"

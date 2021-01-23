@@ -13,22 +13,102 @@
         tools:context=".MapsActivity"
         tools:layout="@layout/dummy_map_layout" />
 
-    <com.google.android.material.bottomappbar.BottomAppBar
-        android:id="@+id/maps_bottom_bar"
-        android:layout_width="match_parent"
+<!--    TODO garvity layout is set to right instead of top not sure if this will cause problems-->
+    <androidx.cardview.widget.CardView
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:backgroundTint="@color/darck_level3"
-        map:navigationIcon="@drawable/ic_menu">
-
-        <TextView
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginStart="10dp"
+        android:backgroundTint="@color/dark_level3"
+        map:cardCornerRadius="16dp"
+        android:layout_gravity="right"
+        android:layout_marginRight="10dp"
+        android:layout_marginLeft="10dp"
+        android:elevation="6dp" >
+        <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Barre d'outils"
-            android:textColor="@color/light_text"
-            map:drawableTopCompat="@android:drawable/arrow_up_float" />
+            android:layout_height="wrap_content">
 
-    </com.google.android.material.bottomappbar.BottomAppBar>
+            <LinearLayout
+                android:id="@+id/layout_infos_closed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone">
 
-    <include layout="@layout/maps_bottom_sheet"/>
+                <ImageButton
+                    android:id="@+id/maps_button_img_open"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="@android:color/transparent"
+                    android:src="@drawable/ic_more" />
+            </LinearLayout>
+            <RelativeLayout
+                android:id="@+id/layout_infos_opened"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:visibility="visible">
+
+                <ImageButton
+                    android:id="@+id/maps_button_img_tool_menu"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentTop="true"
+                    android:src="@android:drawable/arrow_down_float"
+                    android:backgroundTint="@android:color/transparent"/>
+
+                <TextView
+                    android:id="@+id/maps_text_tool_info"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentTop="true"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_toStartOf="@id/maps_button_img_close"
+                    android:layout_toLeftOf="@id/maps_button_img_close"
+                    android:layout_toEndOf="@+id/maps_button_img_tool_menu"
+                    android:layout_toRightOf="@+id/maps_button_img_tool_menu"
+                    android:text="Ajoutez des marqueurs autour de votre parcel.
+                \nAppuyez et maintenez pour ajouter un marqueur, puis cliquez sur les marqueurs qui les relient."
+                    android:textColor="@color/light_text_2"
+                    android:textSize="12sp"
+                    android:visibility="visible"/>
+                <EditText
+                    android:id="@+id/maps_edtxt_search_bar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Recherch"
+                    android:textSize="12sp"
+                    android:textColorHint="@color/light_text_1"
+                    android:textColor="@color/light_text_2"
+                    android:drawableEnd="@drawable/ic_search"
+                    android:drawablePadding="6dp"
+                    android:layout_alignParentTop="true"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_toStartOf="@id/maps_button_img_close"
+                    android:layout_toLeftOf="@id/maps_button_img_close"
+                    android:layout_toEndOf="@+id/maps_button_img_tool_menu"
+                    android:layout_toRightOf="@+id/maps_button_img_tool_menu"
+                    android:drawableRight="@drawable/ic_more"
+                    android:visibility="gone"
+                    />
+
+                <ImageButton
+                    android:id="@+id/maps_button_img_close"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentEnd="true"
+                    android:layout_alignParentRight="true"
+                    android:backgroundTint="@android:color/transparent"
+                    android:src="@drawable/ic_close" />
+            </RelativeLayout>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <include layout="@layout/maps_bottom_sheet" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
