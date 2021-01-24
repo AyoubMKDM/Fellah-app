@@ -76,16 +76,11 @@
                     android:textColor="@color/light_text_2"
                     android:textSize="12sp"
                     android:visibility="visible"/>
-                <EditText
-                    android:id="@+id/maps_edtxt_search_bar"
+
+                <SearchView
+                    android:id="@+id/maps_searchview_search_bar"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Recherch"
-                    android:textSize="12sp"
-                    android:textColorHint="@color/light_text_1"
-                    android:textColor="@color/light_text_2"
-                    android:drawableEnd="@drawable/ic_search"
-                    android:drawablePadding="6dp"
                     android:layout_alignParentTop="true"
                     android:layout_marginStart="10dp"
                     android:layout_marginLeft="10dp"
@@ -93,9 +88,14 @@
                     android:layout_toLeftOf="@id/maps_button_img_close"
                     android:layout_toEndOf="@+id/maps_button_img_tool_menu"
                     android:layout_toRightOf="@+id/maps_button_img_tool_menu"
+                    android:drawableEnd="@drawable/ic_search"
                     android:drawableRight="@drawable/ic_more"
-                    android:visibility="gone"
-                    />
+                    android:drawablePadding="4dp"
+                    android:queryHint="Entrez l'adresse, la ville ou le code postal"
+                    android:textColor="@color/light_text_2"
+                    android:textColorHint="@color/light_text_1"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
 
                 <ImageButton
                     android:id="@+id/maps_button_img_close"

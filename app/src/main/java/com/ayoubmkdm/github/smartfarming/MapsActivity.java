@@ -10,16 +10,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.SearchView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,13 +40,18 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.tasks.Task;
+import com.google.android.libraries.places.api.Places;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleMap.OnMapClickListener, GoogleMap.OnMapLongClickListener,
         GoogleMap.OnMarkerClickListener, GoogleMap.OnMarkerDragListener, View.OnClickListener {
     private static final String TAG = "MapsActivity";
-    public static final float DEFAULT_ZOOM = 15f;
+    private static final float DEFAULT_ZOOM = 15f;
     private static final String FINE_LOCATION = Manifest.permission.ACCESS_FINE_LOCATION;
     private static final String COARSE_LOCATION = Manifest.permission.ACCESS_COARSE_LOCATION;
     private static final int PERMISSIONS_GRANTED = 0;
@@ -71,7 +80,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private ImageButton mButtonDeleteMarker;
     private ImageButton mButtonSaveMyWork;
     private Switch mSwitchDeleteMarker;
-    private EditText mSearchBar;
+    private SearchView mSearchBar;
     private TextView mTextInfos;
     private boolean isDeletingMarkerOn = false;
 
@@ -103,7 +112,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mButtonSaveMyWork = findViewById(R.id.maps_button_img_save_work);
         mSwitchDeleteMarker = findViewById(R.id.maps_switch_delete_marker);
         mTextInfos = findViewById(R.id.maps_text_tool_info);
-        mSearchBar = findViewById(R.id.maps_edtxt_search_bar);
+        mSearchBar = findViewById(R.id.maps_searchview_search_bar);
         //get the data from the intent
         mLocationPermissionGranted = getIntent().getBooleanExtra(MainActivity.IS_PERMISSIONS_GRANTED,
                 false);
@@ -111,6 +120,42 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         handelBottomMenuClicks();
         //BottomSheet utility
         mBottomSheetBehavior.addBottomSheetCallback(bottomSheetCallback());
+        handelSearchQuery();
+    }
+
+    private void handelSearchQuery() {
+        mSearchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                geolocate(mSearchBar.getQuery().toString());
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
+    }
+
+    private void geolocate(String query) {
+        Log.d(TAG, "geolocate: geolocationg");
+        Geocoder geocoder = new Geocoder(this);
+        List<Address> results = new ArrayList();
+        try {
+            results = geocoder.getFromLocationName(query,1);
+        }catch (IOException e){
+            Log.d(TAG, "geolocate: IOException: " + e.getMessage());
+        }
+        if (results.size() > 0) {
+            Address result = results.get(0);
+            Log.d(TAG, "geolocate: Result:" + result.toString());
+            LatLng resultLatlng = new LatLng(result.getLatitude(), result.getLongitude());
+            moveCamera(resultLatlng, DEFAULT_ZOOM);
+        }else {
+            Toast.makeText(this, "Aucun résultat trouvé", Toast.LENGTH_SHORT).show();
+            hideSoftKeyboard();
+        }
     }
 
     private void handelInfoBarClicks() {
@@ -129,6 +174,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @SuppressLint("MissingPermission")
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        Places.initialize(getApplicationContext(), String.valueOf(R.string.google_places_key));
         mMap = googleMap;
         solvePermissions(isPermissionsSet());
         if (isGpsActivated(this)) {
@@ -269,10 +315,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void moveCamera(LatLng latLng, float zoom){
         Log.d(TAG, "moveCamera: to lat: " + latLng.latitude + ", lng: " + latLng.longitude);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
+        hideSoftKeyboard();
     }
 
-    public boolean isGpsActivated(Context context){
+    private boolean isGpsActivated(Context context){
         mLocationManager = (LocationManager)context.getSystemService(context.LOCATION_SERVICE);
         assert mLocationManager != null;
         return mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
@@ -350,6 +397,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void deleteFunctionality() {
+        if (mLayoutInfosOpened.getVisibility() == View.GONE)    openTheInfoBar();
         if (mSwitchDeleteMarker.isChecked()) {
             mSwitchDeleteMarker.setChecked(false);
         }else{
@@ -359,6 +407,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void openTheSearchBar() {
+        if (mLayoutInfosOpened.getVisibility() == View.GONE)    openTheInfoBar();
         if (mTextInfos.getVisibility() == View.VISIBLE) {
             mTextInfos.setVisibility(View.GONE);
             mSearchBar.setVisibility(View.VISIBLE);
@@ -366,5 +415,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mTextInfos.setVisibility(View.VISIBLE);
             mSearchBar.setVisibility(View.GONE);
         }
+    }
+
+    private void hideSoftKeyboard(){
+        this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
     }
 }
