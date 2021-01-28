@@ -1,4 +1,17 @@
 <resources>
-    <string name="app_name">Smart farming</string>
+    <string name="app_name" translatable="false">Smart farming</string>
     <string name="title_activity_maps">Map</string>
+    <string name="maps_draw_polygons">• Ajouter des marqueurs autour de votre parcelle. \n• Appuyez et maintenez pour ajouter un marqueur, \n• puis cliquez sur les marqueurs qui les relient.</string>
+    <string name="maps_hint_searchbar">Entrez l\'adresse, la ville ou le code postal</string>
+    <string name="maps_delete_marker">• Une fois le bouton de suppression activé, vous pouvez supprimer les marques \n• appuyez sur la marque que vous souhaitez supprimer</string>
+    <string name="maps_no_results_found">Aucun résultat trouvé</string>
+    <string name="maps_new_marker_added">Nouveau marqueur est ajouté</string>
+    <string name="maps_permissions_denied">Impossible d\'obtenir l\'emplacement actuel de l\'appareil</string>
+    <string name="maps_security_exception">Une erreur s\'est produite lors de la tentative d\'obtention de votre position \n</string>
+    <string name="maps_drag_message">faites glisser le marqueur où vous voulez</string>
+    <string name="bottom_sheet_my_location">Ma position</string>
+    <string name="bottom_sheret_search">Recherch</string>
+    <string name="bottom_sheret_drag_marker">Déplacer une marque</string>
+    <string name="bottom_sheret_delete">Supprimer</string>
+    <string name="bottom_sheret_save">Enregistrer</string>
 </resources>

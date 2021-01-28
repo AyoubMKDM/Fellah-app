@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="title_activity_maps">الخرائط</string>
+    <string name="maps_draw_polygons">•أضف علامات حول قطعة الأرض الخاصة بك. \n&#8226;  اضغط باستمرار لإضافة علامة ، \n&#8226; ثم انقر فوق العلامات التي تربطهم. .</string>
+    <string name="maps_hint_searchbar">أدخل العنوان أو المدينة أو الرمز البريدي </string>
+    <string name="maps_delete_marker">• بمجرد تنشيط زر الحذف ، يمكنك حذف العلامات
+        \n• اضغط على العلامة التي تريد إزالتها</string>
+    <string name="maps_no_results_found">لم يتم العثور على نتيجة </string>
+    <string name="maps_new_marker_added">تمت إضافة علامة جديدة </string>
+    <string name="maps_permissions_denied">تعذر الحصول على موقع الجهاز الحالي </string>
+    <string name="maps_security_exception">حدث خطأ أثناء محاولة الحصول على موقعك \n</string>
+    <string name="maps_drag_message">اسحب العلامة حيث تريد </string>
+    <string name="bottom_sheet_my_location">موقعي </string>
+    <string name="bottom_sheret_search">بـحـث</string>
+    <string name="bottom_sheret_drag_marker">انقل العلامة </string>
+    <string name="bottom_sheret_delete">حـذف</string>
+    <string name="bottom_sheret_save">حفــظ</string>
+</resources>

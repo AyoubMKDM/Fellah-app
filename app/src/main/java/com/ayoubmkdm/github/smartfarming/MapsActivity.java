@@ -16,6 +16,8 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -25,7 +27,6 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SearchView;
 import android.widget.Switch;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -80,8 +81,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private ImageButton mButtonDeleteMarker;
     private ImageButton mButtonSaveMyWork;
     private Switch mSwitchDeleteMarker;
-    private SearchView mSearchBar;
-    private TextView mTextInfos;
+    private EditText mSearchField;
+    private LinearLayout mLayoutAbout;
     private boolean isDeletingMarkerOn = false;
 
 
@@ -111,8 +112,33 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mButtonDeleteMarker = findViewById(R.id.maps_button_img_delete_marker);
         mButtonSaveMyWork = findViewById(R.id.maps_button_img_save_work);
         mSwitchDeleteMarker = findViewById(R.id.maps_switch_delete_marker);
-        mTextInfos = findViewById(R.id.maps_text_tool_info);
-        mSearchBar = findViewById(R.id.maps_searchview_search_bar);
+        mLayoutAbout = findViewById(R.id.maps_layout_about);
+        mSearchField = findViewById(R.id.edittext_search_field);
+        // TODO clean this peace of code
+        mSearchField.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+            ImageButton buttonClear = findViewById(R.id.search_button_clear_field);
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                buttonClear.setOnClickListener(v -> {
+                    buttonClear.setVisibility(View.GONE);
+                    mSearchField.setText("");
+                    mSearchField.requestFocus();
+                });
+                if (!s.toString().isEmpty()) buttonClear.setVisibility(View.VISIBLE);
+                if (before == 0 && count == 1 && s.charAt(start) == '\n') {
+                    geolocate(s.toString());
+                    mSearchField.setText(s.subSequence(0, s.length()-1));
+                    mSearchField.clearFocus();
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
         //get the data from the intent
         mLocationPermissionGranted = getIntent().getBooleanExtra(MainActivity.IS_PERMISSIONS_GRANTED,
                 false);
@@ -120,22 +146,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         handelBottomMenuClicks();
         //BottomSheet utility
         mBottomSheetBehavior.addBottomSheetCallback(bottomSheetCallback());
-        handelSearchQuery();
-    }
-
-    private void handelSearchQuery() {
-        mSearchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                geolocate(mSearchBar.getQuery().toString());
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                return false;
-            }
-        });
     }
 
     private void geolocate(String query) {
@@ -151,9 +161,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Address result = results.get(0);
             Log.d(TAG, "geolocate: Result:" + result.toString());
             LatLng resultLatlng = new LatLng(result.getLatitude(), result.getLongitude());
+            hideSoftKeyboard();
             moveCamera(resultLatlng, DEFAULT_ZOOM);
         }else {
-            Toast.makeText(this, "Aucun résultat trouvé", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.maps_no_results_found, Toast.LENGTH_SHORT).show();
             hideSoftKeyboard();
         }
     }
@@ -194,15 +205,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onMapClick(LatLng point) {
-        Toast.makeText(this, point.toString(), Toast.LENGTH_LONG).show();
         mMap.animateCamera(CameraUpdateFactory.newLatLng(point));
         markerClicked = false;
     }
 
     @Override
     public void onMapLongClick(LatLng point) {
-        Toast.makeText(this, "New marker added @ " + point.toString(),
+        Toast.makeText(this, getString(R.string.maps_new_marker_added) ,
                 Toast.LENGTH_LONG).show();
+        /*+
+                        String.format("Latitude %.4f \n", point.latitude) +
+                        String.format("Longitude %.4f ", point.longitude) */
 
         mMap.addMarker(new MarkerOptions().position(point).title(point.toString()).draggable(true));
         markerClicked = false;
@@ -299,7 +312,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         } else {
                             Log.d(TAG, "getDeviceLocation: current location is unknown"
                                     + task.getException());
-                            Toast.makeText(this, "Impossible d'obtenir l'emplacement actuel de l'appareil",
+                            Toast.makeText(this, R.string.maps_permissions_denied,
                                     Toast.LENGTH_LONG).show();
                         }
                     }
@@ -308,8 +321,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }catch (SecurityException e){
             Log.d(TAG, "getDeviceLocation: SecurityException: " + e.getMessage());
             //TODO Create a string resource var for the Toas mnessage
-            Toast.makeText(this, "Une erreur s'est produite lors de la tentative " +
-                    "d'obtention de votre position \n" + e.getMessage(),Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.maps_security_exception) + e.getMessage(),Toast.LENGTH_LONG).show();
         }
     }
 
@@ -328,7 +340,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMarkerDragStart(Marker marker) {
         //TODO Create a string resource var for the Toas mnessage
-        Toast.makeText(this, "faites glisser le marqueur où vous voulez", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, getString(R.string.maps_drag_message), Toast.LENGTH_LONG).show();
         if (mPolygon != null) {
             mPolygon.remove();
             mOptions = new PolygonOptions();
@@ -354,8 +366,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     /******************************* CLICKS HANDELING ***********************************/
+    private LinearLayout mLayoutAboutDelete;
+    private RelativeLayout mLayoutSearch;
     @Override
     public void onClick(View v) {
+        mLayoutAboutDelete = findViewById(R.id.maps_layout_about_delet_markers);
+        mLayoutSearch = findViewById(R.id.maps_layout_searchbar);
         switch (v.getId()){
             case R.id.maps_button_img_close:
                 closeTheInfoBar();
@@ -397,23 +413,30 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void deleteFunctionality() {
+        mLayoutSearch.setVisibility(View.GONE);
         if (mLayoutInfosOpened.getVisibility() == View.GONE)    openTheInfoBar();
         if (mSwitchDeleteMarker.isChecked()) {
+            mLayoutAboutDelete.setVisibility(View.GONE);
+            mLayoutAbout.setVisibility(View.VISIBLE);
             mSwitchDeleteMarker.setChecked(false);
         }else{
+            mLayoutAboutDelete.setVisibility(View.VISIBLE);
+            mLayoutAbout.setVisibility(View.GONE);
             mSwitchDeleteMarker.setChecked(true);
         }
         isDeletingMarkerOn = mSwitchDeleteMarker.isChecked();
     }
 
     private void openTheSearchBar() {
+        mLayoutAboutDelete.setVisibility(View.GONE);
+        if (mSwitchDeleteMarker.isChecked()) mSwitchDeleteMarker.setChecked(false);
         if (mLayoutInfosOpened.getVisibility() == View.GONE)    openTheInfoBar();
-        if (mTextInfos.getVisibility() == View.VISIBLE) {
-            mTextInfos.setVisibility(View.GONE);
-            mSearchBar.setVisibility(View.VISIBLE);
+        if (mLayoutSearch.getVisibility() == View.GONE) {
+            mLayoutAbout.setVisibility(View.GONE);
+            mLayoutSearch.setVisibility(View.VISIBLE);
         }else{
-            mTextInfos.setVisibility(View.VISIBLE);
-            mSearchBar.setVisibility(View.GONE);
+            mLayoutAbout.setVisibility(View.VISIBLE);
+            mLayoutSearch.setVisibility(View.GONE);
         }
     }
 
